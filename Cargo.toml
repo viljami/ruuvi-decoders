@@ -1,0 +1,31 @@
+
+[package]
+name = "ruuvi-decoders"
+version = "0.1.0"
+edition = "2021"
+authors = ["Viljami Peltola"]
+description = "Ruuvi BLE advertisement decoders for Data Formats v5, v6, and E1"
+license = "MIT"
+public = true
+readme = "README.md"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+hex = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+serde_json = "1.0"
+
+[[example]]
+name = "basic_usage"
+required-features = []
+
+[[example]]
+name = "ble_scanner"
+required-features = []
+
+[[example]]
+name = "error_handling"
+required-features = []
