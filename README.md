@@ -9,7 +9,7 @@ High-performance Rust library for decoding Ruuvi sensor BLE advertisements. Supp
 
 ## Features
 
-- 🚀 **High Performance**: Optimized for minimal latency (<1μs per decode)
+- 🚀 **High Performance**: Optimized for minimal latency
 - 🔒 **Type Safe**: Leverages Rust's type system for data integrity
 - 📊 **Complete Coverage**: Supports Data Formats v5, v6, and E1
 - 🧪 **Thoroughly Tested**: All official test vectors pass
@@ -17,11 +17,11 @@ High-performance Rust library for decoding Ruuvi sensor BLE advertisements. Supp
 
 ## Supported Formats
 
-| Format         | Status      | Description                                            | Sensors   |
-| -------------- | ----------- | ------------------------------------------------------ | --------- |
-| **v5 (RAWv2)** | ✅ Complete | Temperature, humidity, pressure, acceleration, battery | RuuviTag  |
-| **v6**         | ✅ Complete | Adds PM2.5, CO2, VOC, NOX, luminosity                  | Ruuvi Air |
-| **E1**         | ✅ Complete | Extended format with PM1.0/2.5/4.0/10.0                | Ruuvi Air |
+| Format         | Status      | Description                                            |
+| -------------- | ----------- | ------------------------------------------------------ |
+| **v5 (RAWv2)** | ✅ Complete | Temperature, humidity, pressure, acceleration, battery |
+| **v6**         | ✅ Complete | Adds PM2.5, CO2, VOC, NOX, luminosity                  |
+| **E1**         | ✅ Complete | Extended format with PM1.0/2.5/4.0/10.0                |
 
 ## Quick Start
 
@@ -216,15 +216,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Ruuvi Innovations Ltd.](https://ruuvi.com/) for the sensor specifications
 - [ruuvitag-sensor](https://github.com/ttu/ruuvitag-sensor) Python library for inspiration
-- All contributors to the Rust ecosystem
 
 ## Related Projects
 
-- [ruuvi-prometheus](https://github.com/ruuvi/ruuvi-prometheus) - Prometheus exporter using this library
-- [ruuvi-influxdb](https://github.com/ruuvi/ruuvi-influxdb) - InfluxDB integration
 - [RuuviTag Firmware](https://github.com/ruuvi/ruuvi.firmware.c) - Official sensor firmware
-
-```
-
-Now, let me create the examples folder with a basic usage example:
-```
