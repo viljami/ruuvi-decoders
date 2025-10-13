@@ -1,8 +1,9 @@
 
 [package]
 name = "ruuvi-decoders"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
+rust-version = "1.90"
 authors = ["Viljami Peltola"]
 description = "Ruuvi BLE advertisement decoders for Data Formats v5, v6, and E1"
 license = "MIT"
