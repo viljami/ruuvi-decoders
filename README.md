@@ -163,7 +163,6 @@ See the [`examples/`](examples/) directory for complete examples:
 
 - [`basic_usage.rs`](examples/basic_usage.rs) - Simple decoding
 - [`ble_scanner.rs`](examples/ble_scanner.rs) - BLE advertisement parsing
-- [`batch_processing.rs`](examples/batch_processing.rs) - High-throughput processing
 - [`error_handling.rs`](examples/error_handling.rs) - Comprehensive error handling
 
 Run an example:
