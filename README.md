@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/ruuvi-decoders.svg)](https://crates.io/crates/ruuvi-decoders)
 [![Documentation](https://docs.rs/ruuvi-decoders/badge.svg)](https://docs.rs/ruuvi-decoders)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/ruuvi/ruuvi-decoders/workflows/CI/badge.svg)](https://github.com/ruuvi/ruuvi-decoders/actions)
+[![Build Status](https://github.com/viljami/ruuvi-decoders/workflows/CI/badge.svg)](https://github.com/viljami/ruuvi-decoders/actions)
 
 High-performance Rust library for decoding Ruuvi sensor BLE advertisements. Supports all major Ruuvi data formats with comprehensive validation and type safety.
 
