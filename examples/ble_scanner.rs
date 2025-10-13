@@ -5,7 +5,7 @@
 //!
 //! Run with: cargo run --example ble_scanner
 
-use ruuvi_decoders::{decode, extract_ruuvi_from_ble, RuuviData};
+use ruuvi_decoders::{RuuviData, decode, extract_ruuvi_from_ble};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
