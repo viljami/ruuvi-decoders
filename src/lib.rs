@@ -2,8 +2,8 @@
 //!
 //! This crate provides decoders for Ruuvi sensor BLE advertisements supporting:
 //! - Data Format 5 (`RAWv2`)
-//! - Data Format 6 (`RAWv3`) - TODO
-//! - Data Format E1 (Encrypted) - TODO
+//! - Data Format 6 (`RAWv3`)
+//! - Data Format E1 (Encrypted)
 //!
 //! # Example
 //!
@@ -137,7 +137,7 @@ fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
         )));
     }
 
-    Ok(hex::decode(hex_str).map_err(|_| DecodeError::InvalidHex(hex_str.to_string()))?)
+    hex::decode(hex_str).map_err(|_| DecodeError::InvalidHex(hex_str.to_string()))
 }
 
 #[cfg(test)]

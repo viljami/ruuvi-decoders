@@ -209,8 +209,6 @@ Contributions are welcome! Please:
 4. Ensure all tests pass
 5. Submit a pull request
 
-See [`TODO.md`](TODO.md) for current development priorities.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

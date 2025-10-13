@@ -50,6 +50,7 @@ pub struct DataFormatV6 {
 ///
 /// * `DecodeError::InvalidLength` - Payload length is not 17 bytes
 /// * `DecodeError::UnsupportedFormat` - Format identifier is not 6
+#[allow(clippy::similar_names)]
 pub fn decode(bytes: &[u8]) -> Result<DataFormatV6> {
     if bytes.len() != PAYLOAD_WITH_MAC_LENGTH {
         return Err(DecodeError::invalid_length(
@@ -109,11 +110,7 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatV6> {
     let voc_flag = (u16::from(bytes[16]) & 0b0100_0000) >> 6;
     let voc_index = {
         let value = (raw_voc_hi << 1) | voc_flag;
-        if value > 500 {
-            None
-        } else {
-            Some(value)
-        }
+        if value > 500 { None } else { Some(value) }
     };
 
     // NOx index: 9 bits, bytes 12 (hi) + flags b7 (LSB)
@@ -121,11 +118,7 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatV6> {
     let nox_flag = (u16::from(bytes[16]) & 0b1000_0000) >> 7;
     let nox_index = {
         let value = (raw_nox_hi << 1) | nox_flag;
-        if value > 500 {
-            None
-        } else {
-            Some(value)
-        }
+        if value > 500 { None } else { Some(value) }
     };
 
     // Luminosity: logarithmic, byte 13
@@ -149,7 +142,7 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatV6> {
         Some(value.min(MAX_VALUE))
     };
 
-    println!("Luminosity: {raw_lum} => {:?}", luminosity);
+    println!("Luminosity: {raw_lum} => {luminosity:?}");
     // Reserved: byte 14
     let reserved = Some(bytes[14]);
 

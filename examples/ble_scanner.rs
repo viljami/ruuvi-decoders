@@ -5,7 +5,7 @@
 //!
 //! Run with: cargo run --example ble_scanner
 
-use ruuvi_decoders::{RuuviData, decode, extract_ruuvi_from_ble};
+use ruuvi_decoders::{decode, extract_ruuvi_from_ble, RuuviData};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -103,43 +103,14 @@ impl BleScanner {
         // Extract sensor values based on format
         match ruuvi_data {
             RuuviData::V5(v5_data) => {
-                sensor_info.last_temperature = v5_data.temperature;
-                sensor_info.last_humidity = v5_data.humidity;
-
-                // Print real-time updates for interesting changes
-                if let Some(temp) = v5_data.temperature {
-                    self.check_temperature_alerts(&sensor_mac, temp);
-                }
+                println!("📊 V5 data received from {sensor_mac}: {v5_data:?}");
             }
-            RuuviData::V6(_v6_data) => {
-                // TODO: Handle V6 data when implemented
-                println!(
-                    "📊 V6 data received from {} (not yet processed)",
-                    sensor_mac
-                );
+            RuuviData::V6(v6_data) => {
+                println!("📊 V6 data received from {sensor_mac}: {v6_data:?}");
             }
-            RuuviData::E1(_e1_data) => {
-                // TODO: Handle E1 data when implemented
-                println!(
-                    "📊 E1 data received from {} (not yet processed)",
-                    sensor_mac
-                );
+            RuuviData::E1(e1_data) => {
+                println!("📊 E1 data received from {sensor_mac}: {e1_data:?}");
             }
-        }
-    }
-
-    /// Check for temperature alerts
-    fn check_temperature_alerts(&self, sensor_mac: &str, temperature: f64) {
-        if temperature > 30.0 {
-            println!(
-                "🔥 HIGH TEMP ALERT: {} reports {:.1}°C",
-                sensor_mac, temperature
-            );
-        } else if temperature < 0.0 {
-            println!(
-                "❄️  LOW TEMP ALERT: {} reports {:.1}°C",
-                sensor_mac, temperature
-            );
         }
     }
 

@@ -54,6 +54,7 @@ pub struct DataFormatE1 {
 /// * `DecodeError::InvalidLength` - Invalid payload length
 /// * `DecodeError::UnsupportedFormat` - Unsupported format identifier
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::similar_names)]
 pub fn decode(bytes: &[u8]) -> Result<DataFormatE1> {
     if bytes.len() != PAYLOAD_WITH_MAC_LENGTH {
         return Err(DecodeError::invalid_length(
@@ -146,11 +147,7 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatE1> {
     let voc_flag = (u16::from(bytes[28]) & 0b0100_0000) >> 6;
     let voc_index = {
         let value = (raw_voc_hi << 1) | voc_flag;
-        if value > 500 {
-            None
-        } else {
-            Some(value)
-        }
+        if value > 500 { None } else { Some(value) }
     };
 
     // NOx index: 9 bits, byte 18 (hi) + flags b7 (LSB, bit 7 of byte 28)
@@ -158,11 +155,7 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatE1> {
     let nox_flag = (u16::from(bytes[28]) & 0b1000_0000) >> 7;
     let nox_index = {
         let value = (raw_nox_hi << 1) | nox_flag;
-        if value > 500 {
-            None
-        } else {
-            Some(value)
-        }
+        if value > 500 { None } else { Some(value) }
     };
 
     // Luminosity: 0.01 Lux/bit, u24, bytes 19-21

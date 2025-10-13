@@ -26,9 +26,9 @@ pub struct RuuviGatewayEvent {
 pub enum DataFormat {
     /// Data Format 5 (`RAWv2`)
     V5 = 5,
-    /// Data Format 6 (`RAWv3`) - TODO
+    /// Data Format 6 (`RAWv3`)
     V6 = 6,
-    /// Data Format E1 (Encrypted) - TODO
+    /// Data Format E1 (Encrypted)
     E1 = 0xE1,
 }
 
@@ -71,15 +71,20 @@ impl DataFormat {
 pub enum RuuviData {
     /// Data Format 5 (`RAWv2`)
     V5(DataFormatV5),
-    /// Data Format 6 (`RAWv3`) - TODO
+    /// Data Format 6 (`RAWv3`)
     #[allow(dead_code)]
     V6(DataFormatV6),
-    /// Data Format E1 (Encrypted) - TODO
+    /// Data Format E1 (Encrypted)
     #[allow(dead_code)]
     E1(DataFormatE1),
 }
 
 impl RuuviData {
+    /// Create `RuuviData` from bytes
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the data is not a valid Ruuvi data format
     pub fn decode(data: &[u8]) -> Result<Self> {
         match data[0] {
             5 => Ok(Self::V5(v5::decode(data)?)),
