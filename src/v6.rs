@@ -142,7 +142,6 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatV6> {
         Some(value.min(MAX_VALUE))
     };
 
-    println!("Luminosity: {raw_lum} => {luminosity:?}");
     // Reserved: byte 14
     let reserved = Some(bytes[14]);
 
@@ -240,7 +239,6 @@ mod tests {
         let bytes = hex_str_to_bytes("067FFF9C40FFFE27109C40FAFAFEFFFF074C8F4F");
         assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
         let result = decode(&bytes).unwrap();
-        println!("{:?}", result);
         assert!((result.temperature.unwrap() - 163.835).abs() < 0.01);
         assert!((result.pressure.unwrap() - 1155.34).abs() < 0.01);
         assert!((result.humidity.unwrap() - 100.0).abs() < 0.01);
