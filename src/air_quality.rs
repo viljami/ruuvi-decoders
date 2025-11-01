@@ -6,6 +6,7 @@ const CO2_MAX: f64 = 2300.0;
 const CO2_MIN: f64 = 420.0;
 const CO2_SCALE: f64 = AQI_MAX / (CO2_MAX - CO2_MIN); // ≈ 0.05319
 
+#[must_use]
 pub fn calc_aqi(mut pm25: f64, mut co2: f64) -> f64 {
     pm25 = pm25.clamp(PM25_MIN, PM25_MAX);
     co2 = co2.clamp(CO2_MIN, CO2_MAX);
