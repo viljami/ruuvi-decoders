@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ruuvi-decoders = "0.1"
+ruuvi-decoders = "0.2"
 ```
 
 ### Basic Usage
