@@ -31,7 +31,7 @@ pub struct DataFormatV6 {
     pub measurement_sequence: Option<u8>,
     /// Flags byte (bitfield, raw)
     pub flags: u8,
-    /// MAC address as lowercase hex string (3 bytes, 24 bits)
+    /// Lowest 3 bytes of device MAC address (3 bytes, 24 bits)
     pub mac_address: String,
 }
 
