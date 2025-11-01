@@ -1,0 +1,44 @@
+---
+source: src/e1.rs
+expression: res
+---
+DataFormatE1 {
+    temperature: Some(
+        163.835,
+    ),
+    humidity: Some(
+        100.0,
+    ),
+    pressure: Some(
+        1155.34,
+    ),
+    pm1_0: Some(
+        1000.0,
+    ),
+    pm2_5: Some(
+        1000.0,
+    ),
+    pm4_0: Some(
+        1000.0,
+    ),
+    pm10_0: Some(
+        1000.0,
+    ),
+    co2: Some(
+        40000,
+    ),
+    voc_index: Some(
+        500,
+    ),
+    nox_index: Some(
+        500,
+    ),
+    luminosity: Some(
+        144284.0,
+    ),
+    measurement_sequence: Some(
+        16777214,
+    ),
+    flags: 63,
+    mac_address: "cbb8334c884f",
+}

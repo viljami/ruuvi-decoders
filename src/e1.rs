@@ -204,13 +204,9 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatE1> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use rstest::rstest;
 
-    /// Converts a hex string (with or without spaces, upper/lowercase) to a Vec<u8>.
-    /// No padding or substitutions are performed. The string must contain the full payload including MAC.
-    fn hex_str_to_bytes(s: &str) -> Vec<u8> {
-        hex::decode(s).expect("Failed to decode hex string")
-    }
+    use super::*;
 
     #[test]
     fn test_decode_invalid_length() {
@@ -233,70 +229,25 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_decode_spec_valid_data() {
-        let bytes = hex_str_to_bytes(
-            "E1170C5668C79E0065007004BD11CA00C90A0213E0AC000000DECDEE100000000000CBB8334C884F",
-        );
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert!((result.temperature.unwrap() - 29.5).abs() < 0.01);
-        assert!((result.pressure.unwrap() - 1011.02).abs() < 0.01);
-        assert!((result.humidity.unwrap() - 55.3).abs() < 0.01);
-        assert!((result.pm1_0.unwrap() - 10.1).abs() < 0.01);
-        assert!((result.pm2_5.unwrap() - 11.2).abs() < 0.01);
-        assert!((result.pm4_0.unwrap() - 121.3).abs() < 0.01);
-        assert!((result.pm10_0.unwrap() - 455.4).abs() < 0.01);
-        assert_eq!(result.co2, Some(201));
-        assert_eq!(result.voc_index, Some(20));
-        assert_eq!(result.nox_index, Some(4));
-        assert!((result.luminosity.unwrap() - 13027.0).abs() < 0.1);
-        assert_eq!(result.measurement_sequence, Some(14601710));
-        assert_eq!(result.mac_address.to_lowercase(), "cbb8334c884f");
-    }
+    #[rstest]
+    #[case::valid(
+        "valid",
+        "E1170C5668C79E0065007004BD11CA00C90A0213E0AC000000DECDEE100000000000CBB8334C884F"
+    )]
+    #[case::maximum(
+        "maximum",
+        "E1800100000000000000000000000000000000000000000000000000000000000000CBB8334C884F"
+    )]
+    #[case::minimum(
+        "minimum",
+        "E17FFF9C40FFFE27102710271027109C40FAFADC28F0000000FFFFFE3F0000000000CBB8334C884F"
+    )]
+    fn decode_snapshot(#[case] name: &str, #[case] hex_str: &str) {
+        use insta::assert_debug_snapshot;
 
-    #[test]
-    fn test_decode_spec_minimum_values() {
-        // Minimum values: all fields at minimum, not available fields set to FF/FFFF/FFFFFF as per spec
-        let bytes = hex_str_to_bytes(
-            "E1800100000000000000000000000000000000000000000000000000000000000000CBB8334C884F",
-        );
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert_eq!(result.temperature, Some(-163.835));
-        assert!((result.humidity.unwrap() - 0.0).abs() < 0.01);
-        assert!((result.pressure.unwrap() - 500.0).abs() < 0.01);
-        assert!((result.pm1_0.unwrap() - 0.0).abs() < 0.01);
-        assert!((result.pm2_5.unwrap() - 0.0).abs() < 0.01);
-        assert!((result.pm4_0.unwrap() - 0.0).abs() < 0.01);
-        assert!((result.pm10_0.unwrap() - 0.0).abs() < 0.01);
-        assert_eq!(result.co2, Some(0));
-        assert_eq!(result.voc_index, Some(0));
-        assert_eq!(result.nox_index, Some(0));
-        assert_eq!(result.luminosity, Some(0.0));
-        assert_eq!(result.measurement_sequence, Some(0));
-        assert_eq!(result.mac_address.to_lowercase(), "cbb8334c884f");
-    }
-
-    #[test]
-    fn test_decode_spec_maximum_values() {
-        let bytes = hex_str_to_bytes(
-            "E17FFF9C40FFFE27102710271027109C40FAFADC28F0000000FFFFFE3F0000000000CBB8334C884F",
-        );
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert!((result.temperature.unwrap() - 163.835).abs() < 0.01);
-        assert!((result.pressure.unwrap() - 1155.34).abs() < 0.01);
-        assert!((result.humidity.unwrap() - 100.0).abs() < 0.01);
-        assert!((result.pm1_0.unwrap() - 1000.0).abs() < 0.01);
-        assert!((result.pm2_5.unwrap() - 1000.0).abs() < 0.01);
-        assert!((result.pm4_0.unwrap() - 1000.0).abs() < 0.01);
-        assert!((result.pm10_0.unwrap() - 1000.0).abs() < 0.01);
-        assert_eq!(result.co2, Some(40000));
-        assert_eq!(result.voc_index, Some(500));
-        assert_eq!(result.nox_index, Some(500));
-        assert!((result.luminosity.unwrap() - 144284.0).abs() < 0.1);
-        assert_eq!(result.measurement_sequence, Some(16777214));
-        assert_eq!(result.mac_address.to_lowercase(), "cbb8334c884f");
+        let raw = hex::decode(hex_str).unwrap();
+        let res = decode(&raw).unwrap();
+        // Snapshot the whole decoded `DataFormatV5` for these canonical payloads.
+        assert_debug_snapshot!(name, res);
     }
 }

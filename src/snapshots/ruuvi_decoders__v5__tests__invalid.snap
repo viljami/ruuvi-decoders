@@ -1,0 +1,17 @@
+---
+source: src/v5.rs
+expression: res
+---
+DataFormatV5 {
+    mac_address: "invalid",
+    temperature: None,
+    humidity: None,
+    pressure: None,
+    acceleration_x: None,
+    acceleration_y: None,
+    acceleration_z: None,
+    battery_voltage: None,
+    tx_power: None,
+    movement_counter: None,
+    measurement_sequence: None,
+}

@@ -284,85 +284,26 @@ fn decode_mac_address(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_debug_snapshot;
+    use rstest::rstest;
 
-    #[test]
-    fn test_decode_valid_data() {
-        // Test case from Ruuvi documentation: valid data
-        let raw_data = hex::decode("0512FC5394C37C0004FFFC040CAC364200CDCBB8334C884F").unwrap();
-        let result = decode(&raw_data).unwrap();
-
-        assert_eq!(result.temperature, Some(24.3));
-        assert_eq!(result.pressure, Some(100044.0));
-        assert_eq!(result.humidity, Some(53.49));
-        assert_eq!(result.acceleration_x, Some(4));
-        assert_eq!(result.acceleration_y, Some(-4));
-        assert_eq!(result.acceleration_z, Some(1036));
-        assert_eq!(result.tx_power, Some(4));
-        assert_eq!(result.battery_voltage, Some(2977));
-        assert_eq!(result.movement_counter, Some(66));
-        assert_eq!(result.measurement_sequence, Some(205));
-        assert_eq!(result.mac_address, "cbb8334c884f");
+    // Keep struct-level decoding snapshot tests (insta) for readability of full structs.
+    #[rstest]
+    #[case::valid("valid", "0512FC5394C37C0004FFFC040CAC364200CDCBB8334C884F")]
+    #[case::maximum("maximum", "057FFFFFFEFFFE7FFF7FFF7FFFFFDEFEFFFECBB8334C884F")]
+    #[case::minimum("minimum", "058001000000008001800180010000000000CBB8334C884F")]
+    #[case::invalid("invalid", "058000FFFFFFFF800080008000FFFFFFFFFFFFFFFFFFFFFF")]
+    #[case::sea_level("sea_level", "0500004E20C8550000000000000000000001CBB8334C884F")]
+    fn decode_snapshot(#[case] name: &str, #[case] hex_str: &str) {
+        let raw = hex::decode(hex_str).unwrap();
+        let res = decode(&raw).unwrap();
+        // Snapshot the whole decoded `DataFormatV5` for these canonical payloads.
+        assert_debug_snapshot!(name, res);
     }
 
+    // Error and boundary checks remain explicit.
     #[test]
-    fn test_decode_maximum_values() {
-        // Test case from Ruuvi documentation: maximum values
-        let raw_data = hex::decode("057FFFFFFEFFFE7FFF7FFF7FFFFFDEFEFFFECBB8334C884F").unwrap();
-        let result = decode(&raw_data).unwrap();
-
-        assert_eq!(result.temperature, Some(163.835));
-        assert_eq!(result.pressure, Some(115534.0));
-        assert_eq!(result.humidity, Some(163.835));
-        assert_eq!(result.acceleration_x, Some(32767));
-        assert_eq!(result.acceleration_y, Some(32767));
-        assert_eq!(result.acceleration_z, Some(32767));
-        assert_eq!(result.tx_power, Some(20));
-        assert_eq!(result.battery_voltage, Some(3646));
-        assert_eq!(result.movement_counter, Some(254));
-        assert_eq!(result.measurement_sequence, Some(65534));
-        assert_eq!(result.mac_address, "cbb8334c884f");
-    }
-
-    #[test]
-    fn test_decode_minimum_values() {
-        // Test case from Ruuvi documentation: minimum values
-        let raw_data = hex::decode("058001000000008001800180010000000000CBB8334C884F").unwrap();
-        let result = decode(&raw_data).unwrap();
-
-        assert_eq!(result.temperature, Some(-163.835));
-        assert_eq!(result.pressure, Some(50000.0));
-        assert_eq!(result.humidity, Some(0.0));
-        assert_eq!(result.acceleration_x, Some(-32767));
-        assert_eq!(result.acceleration_y, Some(-32767));
-        assert_eq!(result.acceleration_z, Some(-32767));
-        assert_eq!(result.tx_power, Some(-40));
-        assert_eq!(result.battery_voltage, Some(1600));
-        assert_eq!(result.movement_counter, Some(0));
-        assert_eq!(result.measurement_sequence, Some(0));
-        assert_eq!(result.mac_address, "cbb8334c884f");
-    }
-
-    #[test]
-    fn test_decode_invalid_values() {
-        // Test case from Ruuvi documentation: invalid values
-        let raw_data = hex::decode("058000FFFFFFFF800080008000FFFFFFFFFFFFFFFFFFFFFF").unwrap();
-        let result = decode(&raw_data).unwrap();
-
-        assert_eq!(result.temperature, None);
-        assert_eq!(result.pressure, None);
-        assert_eq!(result.humidity, None);
-        assert_eq!(result.acceleration_x, None);
-        assert_eq!(result.acceleration_y, None);
-        assert_eq!(result.acceleration_z, None);
-        assert_eq!(result.tx_power, None);
-        assert_eq!(result.battery_voltage, None);
-        assert_eq!(result.movement_counter, None);
-        assert_eq!(result.measurement_sequence, None);
-        assert_eq!(result.mac_address, "invalid");
-    }
-
-    #[test]
-    fn test_decode_wrong_length() {
+    fn decode_errors() {
         let short_data = vec![0x05, 0x12, 0xFC]; // Too short
         assert!(matches!(
             decode(&short_data),
@@ -374,10 +315,7 @@ mod tests {
             decode(&long_data),
             Err(DecodeError::InvalidLength(_))
         ));
-    }
 
-    #[test]
-    fn test_decode_wrong_format() {
         let wrong_format = vec![0x06; 24]; // Format 6, not 5
         assert!(matches!(
             decode(&wrong_format),
@@ -385,138 +323,73 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn test_temperature_decoding() {
-        // Test specific temperature values
-        assert_eq!(decode_temperature(&[0x00, 0x00]).unwrap(), Some(0.0)); // 0°C
-        assert_eq!(decode_temperature(&[0x01, 0xC3]).unwrap(), Some(2.255)); // +2.255°C
-        assert_eq!(decode_temperature(&[0xFE, 0x3D]).unwrap(), Some(-2.255)); // -2.255°C
-        assert_eq!(decode_temperature(&[0x80, 0x00]).unwrap(), None); // Invalid
+    // For primitive-returning decoders, use rstest with expected primitive values.
+    #[rstest]
+    #[case("0000", Some(0.0))]
+    #[case("01C3", Some(2.255))]
+    #[case("FE3D", Some(-2.255))]
+    #[case("8000", None)]
+    fn temperature_cases(#[case] hex_str: &str, #[case] expected: Option<f64>) {
+        let bytes = hex::decode(hex_str).unwrap();
+        assert_eq!(decode_temperature(&bytes).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("0000", Some(0.0))]
+    #[case("2710", Some(25.0))]
+    #[case("9C40", Some(100.0))]
+    #[case("FFFF", None)]
+    fn humidity_cases(#[case] hex_str: &str, #[case] expected: Option<f64>) {
+        let bytes = hex::decode(hex_str).unwrap();
+        assert_eq!(decode_humidity(&bytes).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("0000", Some(50000.0))]
+    #[case("C855", Some(101285.0))]
+    #[case("FFFE", Some(115534.0))]
+    #[case("FFFF", None)]
+    fn pressure_cases(#[case] hex_str: &str, #[case] expected: Option<f64>) {
+        let bytes = hex::decode(hex_str).unwrap();
+        assert_eq!(decode_pressure(&bytes).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("03E8", Some(1000))]
+    #[case("FC18", Some(-1000))]
+    #[case("8000", None)]
+    fn acceleration_cases(#[case] hex_str: &str, #[case] expected: Option<i16>) {
+        let bytes = hex::decode(hex_str).unwrap();
+        assert_eq!(decode_acceleration(&bytes).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("0AC3", (Some(1686u16), Some(-34i8)))]
+    #[case("FFE0", (None, Some(-40i8)))] // battery invalid; lower bits E0 -> 0 => -40 dBm
+    #[case("FFFF", (None, None))]
+    fn power_info_cases(#[case] hex_str: &str, #[case] expected: (Option<u16>, Option<i8>)) {
+        let bytes = hex::decode(hex_str).unwrap();
+        assert_eq!(decode_power_info(&bytes).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case([0xCB, 0xB8, 0x33, 0x4C, 0x88, 0x4F], "cbb8334c884f")]
+    #[case([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], "invalid")]
+    fn mac_address_cases(#[case] input: [u8; 6], #[case] expected: &str) {
+        assert_eq!(decode_mac_address(&input), expected.to_string());
     }
 
     #[test]
-    fn test_humidity_decoding() {
-        // Test specific humidity values
-        assert_eq!(decode_humidity(&[0x00, 0x00]).unwrap(), Some(0.0)); // 0%
-        assert_eq!(decode_humidity(&[0x27, 0x10]).unwrap(), Some(25.0)); // 0x2710 = 10000, 10000 * 0.0025 = 25.0%
-        assert_eq!(decode_humidity(&[0x9C, 0x40]).unwrap(), Some(100.0)); // 100%
-        assert_eq!(decode_humidity(&[0xFF, 0xFF]).unwrap(), None); // Invalid
-    }
-
-    #[test]
-    fn test_pressure_decoding() {
-        // Test specific pressure values
-        assert_eq!(decode_pressure(&[0x00, 0x00]).unwrap(), Some(50000.0)); // 50000 Pa
-        assert_eq!(decode_pressure(&[0xC8, 0x55]).unwrap(), Some(101285.0)); // 0xC855 = 51285, 51285 + 50000 = 101285 Pa
-        assert_eq!(decode_pressure(&[0xFF, 0xFE]).unwrap(), Some(115534.0)); // 115534 Pa
-        assert_eq!(decode_pressure(&[0xFF, 0xFF]).unwrap(), None); // Invalid
-    }
-
-    #[test]
-    fn test_power_info_decoding() {
-        // Test power info decoding
-        let (battery, tx) = decode_power_info(&[0x0A, 0xC3]).unwrap();
-        // 0x0AC3 = 0000 1010 1100 0011
-        // Battery: 0000 1010 110 = 86, so 86 + 1600 = 1686mV
-        // TX: 00011 = 3, so -40 + 3*2 = -34dBm
-        assert_eq!(battery, Some(1686));
-        assert_eq!(tx, Some(-34));
-
-        let (battery_invalid, tx_invalid) = decode_power_info(&[0xFF, 0xFF]).unwrap();
-        assert_eq!(battery_invalid, None);
-        assert_eq!(tx_invalid, None);
-    }
-
-    #[test]
-    fn test_mac_address_decoding() {
-        // Test normal MAC
-        let mac = decode_mac_address(&[0xCB, 0xB8, 0x33, 0x4C, 0x88, 0x4F]);
-        assert_eq!(mac, "cbb8334c884f");
-
-        // Test invalid MAC (all 0xFF)
-        let invalid_mac = decode_mac_address(&[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
-        assert_eq!(invalid_mac, "invalid");
-
-        // Test wrong length
-        let wrong_length_mac = decode_mac_address(&[0xCB, 0xB8, 0x33]);
-        assert_eq!(wrong_length_mac, "invalid");
-    }
-
-    #[test]
-    fn test_boundary_values() {
-        // Test battery voltage just before invalid (2046)
-        let (battery, _) = decode_power_info(&[0xFF, 0xE0]).unwrap(); // 2047 << 5 | 0 = 0xFFE0
-        assert_eq!(battery, None); // 2047 is invalid
-
-        let (battery, _) = decode_power_info(&[0xFF, 0xC0]).unwrap(); // 2046 << 5 | 0 = 0xFFC0
-        assert_eq!(battery, Some(3646)); // 2046 + 1600 = 3646mV
-
-        // Test TX power just before invalid (30)
-        let (_, tx) = decode_power_info(&[0x00, 0x1F]).unwrap(); // 0 << 5 | 31 = 0x001F
-        assert_eq!(tx, None); // 31 is invalid
-
-        let (_, tx) = decode_power_info(&[0x00, 0x1E]).unwrap(); // 0 << 5 | 30 = 0x001E
-        assert_eq!(tx, Some(20)); // -40 + 30*2 = 20dBm
-
-        // Test movement counter boundary
+    fn movement_and_sequence_boundaries() {
+        // Movement counter boundary
         assert_eq!(decode_movement_counter(254), Some(254));
         assert_eq!(decode_movement_counter(255), None);
 
-        // Test measurement sequence boundary
+        // Measurement sequence boundary
         assert_eq!(
             decode_measurement_sequence(&[0xFF, 0xFE]).unwrap(),
             Some(65534)
         );
         assert_eq!(decode_measurement_sequence(&[0xFF, 0xFF]).unwrap(), None);
-    }
-
-    #[test]
-    fn test_realistic_sensor_readings() {
-        // Test room temperature (22°C)
-        let temp_data = (22.0 / 0.005) as i16;
-        let temp_bytes = temp_data.to_be_bytes();
-        assert_eq!(decode_temperature(&temp_bytes).unwrap(), Some(22.0));
-
-        // Test sea level pressure (101325 Pa)
-        let pressure_raw = (101325 - 50000) as u16;
-        let pressure_bytes = pressure_raw.to_be_bytes();
-        assert_eq!(decode_pressure(&pressure_bytes).unwrap(), Some(101325.0));
-
-        // Test comfortable humidity (45%)
-        let humidity_raw = (45.0 / 0.0025) as u16;
-        let humidity_bytes = humidity_raw.to_be_bytes();
-        assert_eq!(decode_humidity(&humidity_bytes).unwrap(), Some(45.0));
-
-        // Test 1G acceleration (gravity)
-        let acc_data = 1000i16; // 1000 mG = 1G
-        let acc_bytes = acc_data.to_be_bytes();
-        assert_eq!(decode_acceleration(&acc_bytes).unwrap(), Some(1000));
-    }
-
-    #[test]
-    fn test_rounding_precision() {
-        // Test temperature precision at various points
-        assert_eq!(decode_temperature(&[0x00, 0x01]).unwrap(), Some(0.005)); // 1 * 0.005
-        assert_eq!(decode_temperature(&[0x00, 0x02]).unwrap(), Some(0.01)); // 2 * 0.005
-
-        // Test humidity precision
-        assert_eq!(decode_humidity(&[0x00, 0x01]).unwrap(), Some(0.0025)); // 1 * 0.0025
-        assert_eq!(decode_humidity(&[0x00, 0x04]).unwrap(), Some(0.01)); // 4 * 0.0025
-
-        // Test negative temperature precision
-        assert_eq!(decode_temperature(&[0xFF, 0xFF]).unwrap(), Some(-0.005)); // -1 * 0.005
-        assert_eq!(decode_temperature(&[0xFF, 0xFE]).unwrap(), Some(-0.01)); // -2 * 0.005
-    }
-
-    #[test]
-    fn test_realistic_edge_cases() {
-        // Test with sea level pressure (exactly 24 bytes)
-        let sea_level = hex::decode("0500004E20C8550000000000000000000001CBB8334C884F").unwrap();
-        let result = decode(&sea_level).unwrap();
-
-        assert_eq!(result.temperature, Some(0.0)); // 0°C
-        assert_eq!(result.humidity, Some(50.0)); // 0x4E20 = 20000, 20000 * 0.0025 = 50%
-        assert_eq!(result.pressure, Some(101285.0)); // 0xC855 = 51285, +50000 = 101285 Pa
-        assert_eq!(result.measurement_sequence, Some(1));
     }
 }

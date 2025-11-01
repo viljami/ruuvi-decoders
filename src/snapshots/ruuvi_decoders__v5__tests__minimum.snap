@@ -1,0 +1,37 @@
+---
+source: src/v5.rs
+expression: res
+---
+DataFormatV5 {
+    mac_address: "cbb8334c884f",
+    temperature: Some(
+        -163.835,
+    ),
+    humidity: Some(
+        0.0,
+    ),
+    pressure: Some(
+        50000.0,
+    ),
+    acceleration_x: Some(
+        -32767,
+    ),
+    acceleration_y: Some(
+        -32767,
+    ),
+    acceleration_z: Some(
+        -32767,
+    ),
+    battery_voltage: Some(
+        1600,
+    ),
+    tx_power: Some(
+        -40,
+    ),
+    movement_counter: Some(
+        0,
+    ),
+    measurement_sequence: Some(
+        0,
+    ),
+}

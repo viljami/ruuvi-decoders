@@ -177,31 +177,21 @@ pub fn decode(bytes: &[u8]) -> Result<DataFormatV6> {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
     use super::*;
 
-    /// Converts a hex string (with or without spaces, upper/lowercase) to a Vec<u8>.
-    /// No padding or substitutions are performed. The string must contain the full payload including MAC.
-    fn hex_str_to_bytes(s: &str) -> Vec<u8> {
-        hex::decode(s).expect("Failed to decode hex string")
-    }
+    #[rstest]
+    #[case::valid("valid", "06170C5668C79E007000C90501D9FFCD004C884F")]
+    #[case::maximum("maximum", "067FFF9C40FFFE27109C40FAFAFEFFFF074C8F4F")]
+    #[case::minimum("minimum", "06800100000000000000000000000000004C884F")]
+    fn decode_snapshot(#[case] name: &str, #[case] hex_str: &str) {
+        use insta::assert_debug_snapshot;
 
-    #[test]
-    fn test_decode_valid_data() {
-        let bytes = hex_str_to_bytes("06170C5668C79E007000C90501D9FFCD004C884F");
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert_eq!(result.temperature, Some(29.5));
-        assert!(result.humidity.unwrap() - 55.3 < 0.01);
-        assert_eq!(result.pressure, Some(1011.02)); // -100.0 hPa is invalid
-        assert!(result.pm2_5.unwrap() - 11.2 < 0.01);
-        assert_eq!(result.co2, Some(201));
-        assert_eq!(result.voc_index, Some(10));
-        assert_eq!(result.nox_index, Some(2));
-        assert!(result.luminosity.unwrap() - 13_026.67 < 0.01);
-        assert_eq!(result.reserved, Some(0xFF));
-        assert_eq!(result.measurement_sequence, Some(205));
-        assert_eq!(result.flags, 0x00);
-        assert_eq!(result.mac_address, "4c884f");
+        let raw = hex::decode(hex_str).unwrap();
+        let res = decode(&raw).unwrap();
+        // Snapshot the whole decoded `DataFormatV5` for these canonical payloads.
+        assert_debug_snapshot!(name, res);
     }
 
     #[test]
@@ -212,65 +202,6 @@ mod tests {
             DecodeError::InvalidLength(_) => {}
             _ => panic!("Expected InvalidLength error"),
         }
-    }
-
-    #[test]
-    fn test_decode_spec_valid_data() {
-        let bytes = hex_str_to_bytes("06170C5668C79E007000C90501D9FFCD004C884F");
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert!((result.temperature.unwrap() - 29.5).abs() < 0.01);
-        assert!((result.pressure.unwrap() - 1011.02).abs() < 0.01);
-        assert!((result.humidity.unwrap() - 55.3).abs() < 0.01);
-        assert!((result.pm2_5.unwrap() - 11.2).abs() < 0.01);
-        assert_eq!(result.co2, Some(201));
-        assert_eq!(result.voc_index, Some(10));
-        assert_eq!(result.nox_index, Some(2));
-        // Luminosity: 0xD9, should decode to ~13026.67 Lux
-        assert!((result.luminosity.unwrap() as f64 - 13026.67).abs() < 1.0);
-        assert_eq!(result.measurement_sequence, Some(205));
-        assert_eq!(result.reserved, Some(0xFF));
-        assert_eq!(result.flags, 0x00);
-        assert_eq!(result.mac_address, "4c884f");
-    }
-
-    #[test]
-    fn test_decode_spec_maximum_values() {
-        let bytes = hex_str_to_bytes("067FFF9C40FFFE27109C40FAFAFEFFFF074C8F4F");
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert!((result.temperature.unwrap() - 163.835).abs() < 0.01);
-        assert!((result.pressure.unwrap() - 1155.34).abs() < 0.01);
-        assert!((result.humidity.unwrap() - 100.0).abs() < 0.01);
-        assert!((result.pm2_5.unwrap() - 1000.0).abs() < 0.01);
-        assert_eq!(result.co2, Some(40000));
-        assert_eq!(result.voc_index, Some(500));
-        assert_eq!(result.nox_index, Some(500));
-        // Luminosity: 0xFE, should decode to ~65355.00 Lux
-        assert!((result.luminosity.unwrap() - 65535.0).abs() < 1.0);
-        assert_eq!(result.measurement_sequence, Some(255));
-        assert_eq!(result.reserved, Some(0xFF));
-        assert_eq!(result.flags, 0x07);
-        assert_eq!(result.mac_address, "4c8f4f");
-    }
-
-    #[test]
-    fn test_decode_spec_minimum_values() {
-        let bytes = hex_str_to_bytes("06800100000000000000000000000000004C884F");
-        assert_eq!(bytes.len(), PAYLOAD_WITH_MAC_LENGTH);
-        let result = decode(&bytes).unwrap();
-        assert_eq!(result.temperature, Some(-163.835));
-        assert!((result.pressure.unwrap() - 500.0).abs() < 0.01);
-        assert!((result.humidity.unwrap() - 0.0).abs() < 0.01);
-        assert!((result.pm2_5.unwrap() - 0.0).abs() < 0.01);
-        assert_eq!(result.co2, Some(0));
-        assert_eq!(result.voc_index, Some(0));
-        assert_eq!(result.nox_index, Some(0));
-        assert_eq!(result.luminosity, Some(0.0_f64));
-        assert_eq!(result.measurement_sequence, Some(0));
-        assert_eq!(result.reserved, Some(0x00));
-        assert_eq!(result.flags, 0x00);
-        assert_eq!(result.mac_address, "4c884f");
     }
 
     #[test]

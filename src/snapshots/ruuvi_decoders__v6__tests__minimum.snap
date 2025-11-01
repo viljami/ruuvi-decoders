@@ -1,0 +1,38 @@
+---
+source: src/v6.rs
+expression: res
+---
+DataFormatV6 {
+    temperature: Some(
+        -163.835,
+    ),
+    humidity: Some(
+        0.0,
+    ),
+    pressure: Some(
+        500.0,
+    ),
+    pm2_5: Some(
+        0.0,
+    ),
+    co2: Some(
+        0,
+    ),
+    voc_index: Some(
+        0,
+    ),
+    nox_index: Some(
+        0,
+    ),
+    luminosity: Some(
+        0.0,
+    ),
+    reserved: Some(
+        0,
+    ),
+    measurement_sequence: Some(
+        0,
+    ),
+    flags: 0,
+    mac_address: "4c884f",
+}
