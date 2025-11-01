@@ -94,3 +94,28 @@ impl RuuviData {
         }
     }
 }
+
+impl TryFrom<&[u8]> for RuuviData {
+    type Error = DecodeError;
+
+    fn try_from(value: &[u8]) -> std::result::Result<Self, Self::Error> {
+        RuuviData::decode(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_decode_valid_data() {
+        let v5sensorevent = "0512FC5394C37C0004FFFC040CAC364200CDCBB8334C884F";
+
+        RuuviData::try_from(
+            hex::decode(v5sensorevent)
+                .expect("Failed to decode hex")
+                .as_slice(),
+        )
+        .expect("Decoded v5 slice");
+    }
+}
