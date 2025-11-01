@@ -22,6 +22,7 @@
 //! }
 //! ```
 
+pub mod air_quality;
 pub mod e1;
 pub mod error;
 pub mod ruuvi_data;
