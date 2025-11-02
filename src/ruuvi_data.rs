@@ -2,6 +2,7 @@
 //!
 //! These types match the TypeScript interfaces in the shared package
 
+use crate::air_quality::calc_aqi;
 use crate::error::{DecodeError, Result};
 use crate::{
     e1::{self, DataFormatE1},
@@ -91,6 +92,27 @@ impl RuuviData {
             6 => Ok(Self::V6(v6::decode(data)?)),
             0xE1 => Ok(Self::E1(e1::decode(data)?)),
             other => Err(DecodeError::UnsupportedFormat(other)),
+        }
+    }
+
+    #[must_use]
+    pub fn calculate_air_quality(&self) -> Option<f64> {
+        match self {
+            RuuviData::V5(_) => None,
+            RuuviData::V6(v6) => {
+                if let (Some(pm2_5), Some(co2)) = (v6.pm2_5, v6.co2) {
+                    Some(calc_aqi(pm2_5, co2))
+                } else {
+                    None
+                }
+            }
+            RuuviData::E1(e1) => {
+                if let (Some(pm2_5), Some(co2)) = (e1.pm2_5, e1.co2) {
+                    Some(calc_aqi(pm2_5, co2))
+                } else {
+                    None
+                }
+            }
         }
     }
 }
