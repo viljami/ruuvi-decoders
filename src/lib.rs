@@ -32,6 +32,34 @@ pub mod v6;
 pub use error::{DecodeError, Result};
 pub use ruuvi_data::{DataFormat, RuuviData};
 
+/// Decodes a Ruuvi BLE advertisement data string into a [`RuuviData`] struct.
+/// Based on: https://docs.ruuvi.com/communication/bluetooth-advertisements
+///
+/// # Arguments
+///
+/// * `data` - Hex string of the Ruuvi payload (without the 9904 manufacturer prefix)
+///
+/// # Returns
+///
+/// * `Ok(RuuviData)` - Successfully decoded data
+pub fn decode_ble(data: &str) -> Result<RuuviData> {
+    let length = hex_to_bytes(&data[0..2])?;
+
+    if !length.is_empty() && length[0] != (data.len() as u8 - 10) / 2 {
+        return Err(DecodeError::InvalidLength(data.to_string()));
+    }
+
+    // let _manufacturer_specified_data = data[2..4]
+    //     .parse::<u16>()
+    //     .map_err(|_| DecodeError::InvalidHex(data.to_string()))?;
+
+    let Some(sensor_payload) = extract_ruuvi_from_ble(&data[4..]) else {
+        return Err(DecodeError::InvalidHex(data[4..].to_string()));
+    };
+
+    decode(&sensor_payload)
+}
+
 /// Main entry point for decoding Ruuvi BLE advertisement data
 ///
 /// # Arguments
@@ -79,7 +107,11 @@ pub fn decode(hex_data: &str) -> Result<RuuviData> {
             Ok(RuuviData::V6(data))
         }
         0xE1 => {
-            let data = e1::decode(&bytes)?;
+            let data = if bytes.len() == e1::PAYLOAD_WITH_MAC_AND_FLAGS_LENGTH {
+                e1::decode(&bytes[0..e1::PAYLOAD_WITH_MAC_LENGTH])?
+            } else {
+                e1::decode(&bytes)?
+            };
             Ok(RuuviData::E1(data))
         }
         format => Err(DecodeError::UnsupportedFormat(format)),
@@ -143,7 +175,17 @@ fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_debug_snapshot;
+
     use super::*;
+
+    #[test]
+    fn test_decode_ble() {
+        let ble_data = "2BFF9904E112622998C8B300050008000A000A02312C00FFFFFFFFFFFFAEEB38F8FFFFFFFFFFD83FFFFF2A03030398FC";
+        let result = decode_ble(ble_data);
+        let data = result.expect("Failed to decode Ruuvi data");
+        assert_debug_snapshot!(data);
+    }
 
     #[test]
     fn test_hex_to_bytes() {

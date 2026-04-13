@@ -4,6 +4,8 @@ use std::fmt::Write;
 
 pub const PAYLOAD_LENGTH: usize = 34;
 pub const PAYLOAD_WITH_MAC_LENGTH: usize = PAYLOAD_LENGTH + 6;
+pub const FLAGS_LENGTH: usize = 4;
+pub const PAYLOAD_WITH_MAC_AND_FLAGS_LENGTH: usize = PAYLOAD_WITH_MAC_LENGTH + FLAGS_LENGTH;
 
 /// Data Format E1 (Extended v1) structure, as specified in the Ruuvi E1 XML spec.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
