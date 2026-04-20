@@ -8,6 +8,10 @@ pub type Result<T> = std::result::Result<T, DecodeError>;
 /// Errors that can occur during Ruuvi data decoding
 #[derive(Error, Debug, Clone, PartialEq)]
 pub enum DecodeError {
+    /// No data provided
+    #[error("No data provided")]
+    NoData,
+
     /// Invalid hex string format
     #[error("Invalid hex string: {0}")]
     InvalidHex(String),
@@ -35,6 +39,9 @@ pub enum DecodeError {
     /// Missing required fields
     #[error("Missing required field: {0}")]
     MissingField(String),
+
+    #[error("Missing manufacturer ID")]
+    MissingManufacturerId,
 }
 
 impl DecodeError {

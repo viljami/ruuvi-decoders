@@ -58,9 +58,10 @@ pub struct DataFormatE1 {
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::similar_names)]
 pub fn decode(bytes: &[u8]) -> Result<DataFormatE1> {
-    if bytes.len() != PAYLOAD_WITH_MAC_LENGTH {
+    let len = bytes.len();
+    if len != PAYLOAD_WITH_MAC_AND_FLAGS_LENGTH && len != PAYLOAD_WITH_MAC_LENGTH {
         return Err(DecodeError::invalid_length(
-            PAYLOAD_WITH_MAC_LENGTH,
+            PAYLOAD_WITH_MAC_AND_FLAGS_LENGTH,
             bytes.len(),
         ));
     }
